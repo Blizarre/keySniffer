@@ -27,13 +27,13 @@ function trainingKeyPressed(code, data) {
                             EE('span', { '@class': 'char'  }, String.fromCharCode(code)),
                             EE('span', { '@class': 'value' }, "0")
                         ]);
-                            
             $("#sniffList").add(node);
             g_features[code] = [ ];
         }
         g_features[code].push(data);
         var item = getCharItem(code);
-        item.textContent = parseInt(item.textContent, 10) + 1;
+        item.textContent = g_features[code].length;
+        showData(data);
 }
 
 

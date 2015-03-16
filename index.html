@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <script type="text/javascript" src="libs/canvasjs/canvasjs.min.js"></script>
         <script type="text/javascript" src="libs/minified-src.js"></script>
+        <script type="text/javascript" src="visu.js"></script>
         <script type="text/javascript" src="sniffer.js"></script>
         <link rel="stylesheet" href="index.css" type="text/css" />
         <title>Keyboard sniffer</title>
@@ -10,6 +12,9 @@
         <h1>Gather training data</h1>
         <input type="text" id="keyTrain"></input>
         <ul id="sniffList"></ul>
+        <h2>Data</h2>
+        <div id="chartContainer" style="height: 300px; width: 100%;">
+
         <h1>Train model</h1>
         <button id="trainFromData">Train !</button>
         <h1>Test</h1>

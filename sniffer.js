@@ -59,12 +59,18 @@ $(function() {
 
     // https://docs.webplatform.org/wiki/apis/webaudio/AudioContext/createMediaStreamSource
     // real sample here: https://github.com/mdn/voice-change-o-matic/blob/gh-pages/scripts/app.js
+    //
+    // W3C draft: http://webaudio.github.io/web-audio-api/#widl-AnalyserNode-fftSize
     navigator.getUserMedia({ audio: true }, function(stream){ 
         var context = new (window.AudioContext || window.webkitAudioContext)();
         g_analyser = context.createAnalyser();
         var micStreamSource = context.createMediaStreamSource(stream);
+        // Check this => Maybe we can get the frequence of the original signal, and deduce the size of fft to get the window time
+        console.log("Frequency of context: " + context.samplerate);
+
         micStreamSource.connect(g_analyser);
-        g_analyser.fftSize = 256;
+        g_analyser.fftSize = 2048;
+        g_analyser.smoothingTimeConstant = 0;
     }, function(){ console.log('Error getting Microphone stream'); });
     
 

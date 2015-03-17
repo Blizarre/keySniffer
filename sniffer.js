@@ -21,7 +21,7 @@ function getCharItem(code)
 }
 
 // a new key has been pressed on the training input field 
-function trainingKeyPressed(code, data) {
+function trainingKeyPressed(code, dataFFT, dataTime) {
         if(!getCharItem(code)) {
             var node = EE('li', { '@class': 'sniff' + code}, [
                             EE('span', { '@class': 'char'  }, String.fromCharCode(code)),
@@ -30,10 +30,11 @@ function trainingKeyPressed(code, data) {
             $("#sniffList").add(node);
             g_features[code] = [ ];
         }
-        g_features[code].push(data);
+        g_features[code].push(dataFFT);
         var item = getCharItem(code);
         item.textContent = g_features[code].length;
-        showData(data);
+        showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization" });
+        showData({what: dataTime, where: "chartContainerTime", title: "time visualization"});
 }
 
 
@@ -53,15 +54,10 @@ function getCurrentFFTData()
     }
 }
 
+//var audioContext = new AudioContext();
+var audioRecorder = null;
 
-// Called when DOM is ready
-$(function() {
-
-    // https://docs.webplatform.org/wiki/apis/webaudio/AudioContext/createMediaStreamSource
-    // real sample here: https://github.com/mdn/voice-change-o-matic/blob/gh-pages/scripts/app.js
-    //
-    // W3C draft: http://webaudio.github.io/web-audio-api/#widl-AnalyserNode-fftSize
-    navigator.getUserMedia({ audio: true }, function(stream){ 
+ function getMediaStream(stream){ 
         var context = new (window.AudioContext || window.webkitAudioContext)();
         g_analyser = context.createAnalyser();
         var micStreamSource = context.createMediaStreamSource(stream);
@@ -71,11 +67,42 @@ $(function() {
         micStreamSource.connect(g_analyser);
         g_analyser.fftSize = 2048;
         g_analyser.smoothingTimeConstant = 0;
-    }, function(){ console.log('Error getting Microphone stream'); });
+        
+        g_analyser.connect(context.destination);
+        
+        // get time data
+        var inputPoint = context.createGain();
+        g_analyser.connect(inputPoint);
+    
+        var analyserNode = context.createAnalyser();
+        analyserNode.fftSize = 2048;
+        inputPoint.connect( analyserNode );
+    
+        audioRecorder = new Recorder( inputPoint, { bufferLen: analyserNode.fftSize, timeMaxLen: 20000} );
+    }
+
+// Called when DOM is ready
+$(function() {
+
+    // https://docs.webplatform.org/wiki/apis/webaudio/AudioContext/createMediaStreamSource
+    // real sample here: https://github.com/mdn/voice-change-o-matic/blob/gh-pages/scripts/app.js
+    //
+    // W3C draft: http://webaudio.github.io/web-audio-api/#widl-AnalyserNode-fftSize
+    navigator.getUserMedia({
+            "audio": {
+                "mandatory": {
+                    "googEchoCancellation": "false",
+                    "googAutoGainControl": "false",
+                    "googNoiseSuppression": "false",
+                    "googHighpassFilter": "false"
+                },
+                "optional": []
+            },
+        }, getMediaStream, function(){ console.log('Error getting Microphone stream'); });
     
 
     $('#keyTrain').on('keypress', function(evt) { 
-        trainingKeyPressed(evt.charCode, getCurrentFFTData());
+        setTimeout(function(){trainingKeyPressed(evt.charCode, getCurrentFFTData(), audioRecorder.getLastSamples(150));},100);
     });
 
 });

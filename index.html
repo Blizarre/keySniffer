@@ -5,6 +5,7 @@
         <script type="text/javascript" src="libs/minified-src.js"></script>
         <script type="text/javascript" src="visu.js"></script>
         <script type="text/javascript" src="sniffer.js"></script>
+        <script type="text/javascript" src="recorder.js"></script>
         <link rel="stylesheet" href="index.css" type="text/css" />
         <title>Keyboard sniffer</title>
     </head>
@@ -13,7 +14,8 @@
         <input type="text" id="keyTrain"></input>
         <ul id="sniffList"></ul>
         <h2>Data</h2>
-        <div id="chartContainer" style="height: 300px; width: 100%;">
+        <div id="chartContainerFFT" style="height: 300px; width: 100%;"></div>
+        <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>
 
         <h1>Train model</h1>
         <button id="trainFromData">Train !</button>

@@ -53,6 +53,10 @@ function getCurrentFFTData()
     }
 }
 
+function getFeaturesToKeep() {
+    return $$('#featureToKeep').value.split(" ").map(Number);
+}
+
 
 // Called when DOM is ready
 $(function() {
@@ -78,4 +82,27 @@ $(function() {
         trainingKeyPressed(evt.charCode, getCurrentFFTData());
     });
 
+    $('#keyTest').on('keypress', function(evt) { 
+        var result = testKeyPressed(getCurrentFFTData());
+        var char;
+        var previousResults = $("#keyTestResult li");
+        previousResults.remove();
+            
+        for(char in result) {
+            if(result.hasOwnProperty(char)) {
+                $("#keyTestResult").add(EE('li', String.fromCharCode(char) + ": " + result[char] ));
+            }
+        }
+    });
+    
+    $('#normalize').on('click', function(){
+        computeNormalizationParams(g_features, getFeaturesToKeep());
+    });
+
+    $('#trainFromData').on('click', function(){
+        var done = trainLearner();
+        $$("#nbIter").textContent = done.iterations.toString();
+        $$("#errorRate").textContent = done.error.toString();
+    });
+    
 });

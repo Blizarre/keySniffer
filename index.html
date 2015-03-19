@@ -8,6 +8,7 @@
         <script type="text/javascript" src="visu.js"></script>        
         <script type="text/javascript" src="train.js"></script>
         <script type="text/javascript" src="sniffer.js"></script>
+        <script type="text/javascript" src="recorder.js"></script>
         <link rel="stylesheet" href="index.css" type="text/css" />
         <title>Keyboard sniffer</title>
     </head>
@@ -16,8 +17,8 @@
         <input type="text" id="keyTrain"></input>
         <ul id="sniffList"></ul>
         <h2>Data</h2>
-        <div id="chartContainer" style="height: 300px; width: 100%;"></div>
-
+        <div id="chartContainerFFT" style="height: 300px; width: 100%;"></div>
+        <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>
         <h1>Train model</h1>
         <p><label for="featureToKeep">Feature to keep</label><input type="text" id="featureToKeep" value="1 3 5 10 20 50 100 150 200 400 700"></input></p>
         <button id="normalize">Normalize</button>

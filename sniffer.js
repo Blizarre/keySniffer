@@ -64,8 +64,6 @@ function getMediaStream(stream){
     var context = new (window.AudioContext || window.webkitAudioContext)();
     g_analyser = context.createAnalyser();
     var micStreamSource = context.createMediaStreamSource(stream);
-    // Check this => Maybe we can get the frequence of the original signal, and deduce the size of fft to get the window time
-    console.log("Frequency of context: " + context.samplerate);
 
     micStreamSource.connect(g_analyser);
     g_analyser.fftSize = 2048;
@@ -106,14 +104,27 @@ $(function() {
 
     $('#keyTrain').on('keypress', function(evt) { 
         setTimeout(function(){trainingKeyPressed(evt.charCode, getCurrentFFTData(), audioRecorder.getLastSamples(150));},100);
+        $('#normalize').set('disabled', null);
+        $('#featureToKeep').set('disabled', null);
+    });
+
+    $('#normalize').on('click', function(){
+        computeNormalizationParams(g_features, getFeaturesToKeep());
+        $('#trainFromData').set('disabled', null);
+    });
+
+    $('#trainFromData').on('click', function(){
+        var done = trainLearner();
+        $$("#nbIter").textContent = done.iterations.toString();
+        $$("#errorRate").textContent = done.error.toString();
+        $('#keyTest').set('disabled', null);
     });
 
     $('#keyTest').on('keypress', function(evt) { 
         var result = testKeyPressed(getCurrentFFTData());
         var char;
-        var previousResults = $("#keyTestResult li");
-        previousResults.remove();
-            
+        $("#keyTestResult").fill();
+
         for(char in result) {
             if(result.hasOwnProperty(char)) {
                 $("#keyTestResult").add(EE('li', String.fromCharCode(char) + ": " + result[char] ));
@@ -121,14 +132,5 @@ $(function() {
         }
     });
     
-    $('#normalize').on('click', function(){
-        computeNormalizationParams(g_features, getFeaturesToKeep());
-    });
-
-    $('#trainFromData').on('click', function(){
-        var done = trainLearner();
-        $$("#nbIter").textContent = done.iterations.toString();
-        $$("#errorRate").textContent = done.error.toString();
-    });
     
 });

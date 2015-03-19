@@ -20,13 +20,13 @@
         <div id="chartContainerFFT" style="height: 300px; width: 100%;"></div>
         <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>
         <h1>Train model</h1>
-        <p><label for="featureToKeep">Feature to keep</label><input type="text" id="featureToKeep" value="1 3 5 10 20 50 100 150 200 400 700"></input></p>
-        <button id="normalize">Normalize</button>
-        <button id="trainFromData">Train !</button>
+        <p><label for="featureToKeep">Feature to keep</label><input type="text" id="featureToKeep" disabled="true" value="1 3 5 10 20 50 100 150 200 400 700"></input></p>
+        <button disabled id="normalize">Normalize</button>
+        <button disabled id="trainFromData">Train !</button>
         <p>Result:</p>
         Error rate: <span id="errorRate"></span>%, number of iterations: <span id="nbIter"></span></p>
         <h1>Test</h1>
-        <input type="text" id="keyTest"></input>
+        <input disabled type="text" id="keyTest"></input>
         <ul id="keyTestResult"></li>
     </body>
 </html>

@@ -1,6 +1,7 @@
 var MINI = require('minified');
 var _=MINI._, $=MINI.$, $$=MINI.$$, EE=MINI.EE, HTML=MINI.HTML;
 
+var CanvasJS = CanvasJS || {}
 
 function showData(e) {
     var data = []; var dataSeries = { dataPoints: [], type: "line" };

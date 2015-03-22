@@ -54,37 +54,40 @@ function getCurrentFFTData()
     }
 }
 
-//var audioContext = new AudioContext();
+function getFeaturesToKeep() {
+    return $$('#featureToKeep').value.split(" ").map(Number);
+}
+
 var audioRecorder = null;
 
- function getMediaStream(stream){ 
-        var context = new (window.AudioContext || window.webkitAudioContext)();
-        g_analyser = context.createAnalyser();
-        var micStreamSource = context.createMediaStreamSource(stream);
-        // Check this => Maybe we can get the frequence of the original signal, and deduce the size of fft to get the window time
-        console.log("Frequency of context: " + context.samplerate);
+function getMediaStream(stream){ 
+    var context = new (window.AudioContext || window.webkitAudioContext)();
+    g_analyser = context.createAnalyser();
+    var micStreamSource = context.createMediaStreamSource(stream);
 
-        micStreamSource.connect(g_analyser);
-        g_analyser.fftSize = 2048;
-        g_analyser.smoothingTimeConstant = 0;
-        
-        g_analyser.connect(context.destination);
-        
-        // get time data
-        var inputPoint = context.createGain();
-        g_analyser.connect(inputPoint);
+    micStreamSource.connect(g_analyser);
+    g_analyser.fftSize = 2048;
+    g_analyser.smoothingTimeConstant = 0;
     
-        var analyserNode = context.createAnalyser();
-        analyserNode.fftSize = 2048;
-        inputPoint.connect( analyserNode );
+    g_analyser.connect(context.destination);
     
-        audioRecorder = new Recorder( inputPoint, { bufferLen: analyserNode.fftSize, timeMaxLen: 20000} );
-    }
+    // get time data
+    var inputPoint = context.createGain();
+    g_analyser.connect(inputPoint);
 
+    var analyserNode = context.createAnalyser();
+    analyserNode.fftSize = 2048;
+    inputPoint.connect( analyserNode );
 
+    audioRecorder = new Recorder( inputPoint, { bufferLen: analyserNode.fftSize, timeMaxLen: 20000} );
+}
+
+var wasKeyUpped=true;
 function keyAction(evt){
     if (!isDOMReady) return;
     setTimeout(function(){trainingKeyPressed(evt.charCode, getCurrentFFTData(), audioRecorder.getLastSamples(150));},100);
+    $('#normalize').set('disabled', null);
+    $('#featureToKeep').set('disabled', null);
 }
 
 var isDOMReady=false;
@@ -107,8 +110,31 @@ $(function() {
             },
         }, getMediaStream, function(){ console.log('Error getting Microphone stream'); });
     
+
     isDOMReady=true;
     //$('#keyTrain').on('onkeydown', function(evt) {});
     
+    $('#normalize').on('click', function(){
+        computeNormalizationParams(g_features, getFeaturesToKeep());
+        $('#trainFromData').set('disabled', null);
+    });
 
+    $('#trainFromData').on('click', function(){
+        var done = trainLearner();
+        $$("#nbIter").textContent = done.iterations.toString();
+        $$("#errorRate").textContent = done.error.toString();
+        $('#keyTest').set('disabled', null);
+    });
+
+    $('#keyTest').on('keypress', function(evt) { 
+        var result = testKeyPressed(getCurrentFFTData());
+        var char;
+        $("#keyTestResult").fill();
+
+        for(char in result) {
+            if(result.hasOwnProperty(char)) {
+                $("#keyTestResult").add(EE('li', String.fromCharCode(char) + ": " + result[char] ));
+            }
+        }
+    });
 });

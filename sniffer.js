@@ -81,6 +81,13 @@ var audioRecorder = null;
         audioRecorder = new Recorder( inputPoint, { bufferLen: analyserNode.fftSize, timeMaxLen: 20000} );
     }
 
+
+function keyAction(evt){
+    if (!isDOMReady) return;
+    setTimeout(function(){trainingKeyPressed(evt.charCode, getCurrentFFTData(), audioRecorder.getLastSamples(150));},100);
+}
+
+var isDOMReady=false;
 // Called when DOM is ready
 $(function() {
 
@@ -100,9 +107,8 @@ $(function() {
             },
         }, getMediaStream, function(){ console.log('Error getting Microphone stream'); });
     
-
-    $('#keyTrain').on('keypress', function(evt) { 
-        setTimeout(function(){trainingKeyPressed(evt.charCode, getCurrentFFTData(), audioRecorder.getLastSamples(150));},100);
-    });
+    isDOMReady=true;
+    //$('#keyTrain').on('onkeydown', function(evt) {});
+    
 
 });

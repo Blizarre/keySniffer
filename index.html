@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="index.css" type="text/css" />
         <title>Keyboard sniffer</title>
     </head>
-    <body>
+    <body onKeyDown="keyAction(event);" onKeyUp="keyAction(event);">
         <h1>Gather training data</h1>
         <input type="text" id="keyTrain"></input>
         <ul id="sniffList"></ul>

@@ -33,6 +33,35 @@ function trainingKeyPressed(code, dataFFT, dataTime) {
         g_features[code].push(dataFFT);
         var item = getCharItem(code);
         item.textContent = g_features[code].length;
+        
+        
+        // Test some display
+        
+        // find maximum
+        var maxValue=-1;
+        var idxMax=-1;
+        for (var i=0; i<dataTime.length; i++)
+        {
+            if (Math.abs(dataTime[i])>maxValue)
+            {
+               maxValue=Math.abs(dataTime[i]);
+               idxMax=i;
+            }
+        }
+        
+        //
+        var timeBefore=3; //ms
+        var timeAfter=12; //ms
+        var minIdxSignal=idxMax-timeBefore*audioRecorder.context.sampleRate/1000;
+        var maxIdxSignal=idxMax+timeAfter*audioRecorder.context.sampleRate/1000;
+        
+        minIdxSignal=(minIdxSignal<0)?0:minIdxSignal;
+        maxIdxSignal=(maxIdxSignal<dataTime.length)?maxIdxSignal:dataTime.length-1;
+        
+        
+        var slicedSignal=dataTime.slice(minIdxSignal, maxIdxSignal);
+        showData({what: slicedSignal , where: "chartTest1" , title: "Test" })
+        
         showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization" });
         showData({what: dataTime, where: "chartContainerTime", title: "time visualization"});
 }

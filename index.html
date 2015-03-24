@@ -12,11 +12,24 @@
         <link rel="stylesheet" href="index.css" type="text/css" />
         <title>Keyboard sniffer</title>
     </head>
-    <body onKeyDown=";if (wasKeyUpped==true) { wasKeyUpped=false; console.log('KeyDown'); keyAction(event); }" onKeyUp="console.log('keyUp'); wasKeyUpped=true; keyAction(event);">
+    <body onKeyDown=";if (wasKeyUpped==true) { wasKeyUpped=false; keyAction(event); }" onKeyUp="wasKeyUpped=true; /*keyAction(event);*/">
         <h1>Gather training data</h1>
         <input type="text" id="keyTrain"></input>
         <ul id="sniffList"></ul>
         <h2>Data</h2>
+        <table>
+            <tr>
+                <td>
+                <div id="chartTest1" style="height: 200px; width: 400px; background-color:#FF0000;"></div>
+                </td>
+                <td>
+                <div id="chartTest2" style="height: 200px; width: 200px; background-color:#FFFF00;"></div>
+                </td>
+                <td>
+                <div id="chartTest3" style="height: 200px; width: 200px; background-color:#FFFF00;"></div>
+                </td>
+            </tr>
+        </table>
         <div id="chartContainerFFT" style="height: 300px; width: 100%;"></div>
         <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>
         <h1>Train model</h1>

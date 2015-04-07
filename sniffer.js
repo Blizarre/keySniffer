@@ -81,16 +81,16 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     
     //
     var timeBefore=3; //ms
-    var timeAfter=12; //ms
+    var timeAfter=3; //ms
     var minIdxSignal=idxMax-timeBefore*g_audioRecorder.context.sampleRate/1000;
     var maxIdxSignal=idxMax+timeAfter*g_audioRecorder.context.sampleRate/1000;
-    
+
     minIdxSignal=(minIdxSignal<0)?0:minIdxSignal;
     maxIdxSignal=(maxIdxSignal<dataTime.length)?maxIdxSignal:dataTime.length-1;
     
     
     var slicedSignal=dataTime.slice(minIdxSignal, maxIdxSignal);
-    showData({what: slicedSignal , where: "chartTest1" , title: "Test" });
+    showData({what: slicedSignal , where: "areaAroundPeak" , title: "Small area around the peak value" });
     
     showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization" });
     showData({what: dataTime, where: "chartContainerTime", title: "time visualization"});

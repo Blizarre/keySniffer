@@ -3,3 +3,14 @@
 {
     margin-left: 10px;
 }
+
+/* The "real" key pressed by the user */ 
+.label {
+    color: green;
+    font-weight:bold;
+}
+
+/* a key not pressed by the user */ 
+.noise {
+    color:black;
+}

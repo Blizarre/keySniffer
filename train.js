@@ -1,77 +1,115 @@
+"use strict";
+
 // to make the js linter happy !
-var brain = brain || {}
+var brain = brain || {};
 
-var g_normalizedData = [];
+function Learner() {
 
-var g_net = new brain.NeuralNetwork();
-var g_min = [];
-var g_max = [];
-var g_selectedFeatures = [];
+    this.neuralNet = new brain.NeuralNetwork();
 
-// features = training data features[<charCode>][<data>]
-// selectedFeatures = features to select selectedFeatures[ ... ]
-function computeNormalizationParams(features, selectedFeatures) {
-    var data, featIndex, sample = {};
-    g_selectedFeatures = selectedFeatures;    
-    // put data in a brain-compliant data structure
-    for (var char in features) {
-        if(features.hasOwnProperty(char)) {
-            for (var sampleIndex = 0; sampleIndex < features[char].length; sampleIndex ++) {
-                var featSubset = new Float32Array(selectedFeatures.length);
-                for(var f = 0; f < selectedFeatures.length; f++) {
-                    featSubset[f] = features[char][sampleIndex][ selectedFeatures[f] ];    
-                }
-                sample = { input : featSubset, output: {} };
-                sample.output[char] = 1
-                g_normalizedData.push( sample );
+    // the index of the features selected for training / testing
+    this.selectedFeatures = [];
+
+    // Array of mainium and maximum values found on the training data for each selected feature
+    this.featuresMinValue = [];
+    this.featuresMaxValue = [];
+}
+
+// Convert from:
+//    data = { label : [ [features], .. ] }
+// to
+//    data = [ { input:label, output: { label: 1 }, ... ]
+//
+// to reduce the number of memory allocation, the feature space reduction is done in the same step
+// using index specified during the object creation
+Learner.prototype.convertToBrainFormat = function(features) {
+    // sample in brain format
+    var sample, char, i;
+
+    var convertedData = [];
+    
+    for (char in features) {
+        if (features.hasOwnProperty(char)) {
+            for (i = 0; i < features[char].length; i++) {
+                sample = {
+                    input: this.extractSubsetFeature(features[char][i]),
+                    output: {}
+                };
+                sample.output[char] = 1;
+                convertedData.push(sample);
             }
         }
     }
     
-    // find min and max of each feature
+    return convertedData;
+};
+
+Learner.prototype.setSelectedFeatures = function(featuresIndex) {
+    this.selectedFeatures = featuresIndex;
     
+    // Normalization data invalidation
+    this.featuresMinValue = [];
+    this.featuresMaxValue = [];
+};
+
+Learner.prototype.extractSubsetFeature = function(originalArray) {
+    var featSubset = new Float32Array(this.selectedFeatures.length);
+    for (var f = 0; f < this.selectedFeatures.length; f++) {
+        featSubset[f] = originalArray[this.selectedFeatures[f]];
+    }
+    return featSubset;
+};
+
+
+// find min and max of each feature
+Learner.prototype.computeNormalizationParams = function(data) {
+    var sample, i;
+
     //Initialize
-    g_min = new Float32Array(g_normalizedData[0].input); 
-    g_max = new Float32Array(g_normalizedData[0].input); 
+    this.featuresMinValue = new Float32Array(data[0].input);
+    this.featuresMaxValue = new Float32Array(data[0].input);
 
-    for(data in g_normalizedData) {
-        if(g_normalizedData.hasOwnProperty(data))  {
-            for(featIndex = 0; featIndex < selectedFeatures.length; featIndex ++) {
-                g_min[featIndex] = Math.min(g_min[featIndex], g_normalizedData[data].input[featIndex]);
-                g_max[featIndex] = Math.max(g_max[featIndex], g_normalizedData[data].input[featIndex]);
+    for (sample in data) {
+        if (data.hasOwnProperty(sample)) {
+            for (i = 0; i < this.selectedFeatures.length; i++) {
+                this.featuresMinValue[i] = Math.min(this.featuresMinValue[i], data[sample].input[i]);
+                this.featuresMaxValue[i] = Math.max(this.featuresMaxValue[i], data[sample].input[i]);
             }
         }
     }
+};
+
+
+// Return a normalized version of the data.
+Learner.prototype.normalize = function(data) {
+    var sample, normSample, i;
+    var normData = [];
     
     // normalize features
-    for(data in g_normalizedData) {
-        if(g_normalizedData.hasOwnProperty(data))  {
-            for(featIndex = 0; featIndex < selectedFeatures.length; featIndex ++) {
-                g_normalizedData[data].input[featIndex] = (g_normalizedData[data].input[featIndex] - g_min[featIndex]) / (g_max[featIndex] - g_min[featIndex]);
+    for (sample in data) {
+        if (data.hasOwnProperty(sample)) {
+            normSample = {};
+            normSample.input = new Float32Array(this.selectedFeatures.length);
+            normSample.output = data[sample].output;
+            for (i = 0; i < this.selectedFeatures.length; i++) {
+                normSample.input[i] = (data[sample].input[i] - this.featuresMinValue[i]) / (this.featuresMaxValue[i] - this.featuresMinValue[i]);
             }
+            normData.push(normSample);
         }
     }
-}
+    return normData;
+};
 
 // return {error: errorRate, iterations:nbIterations }
-function trainLearner() {
+Learner.prototype.train = function(data) {
     console.log("start training");
-    var result = g_net.train(g_normalizedData);
+    var result = this.neuralNet.train(this.normalize(data));
     console.log("done training");
     return result;
-}
+};
 
-
-// return { char: proba }
-function testKeyPressed(data) {
-    // put data in a brain-compliant data structure
-    var testData = new Float32Array(g_selectedFeatures.length);
-    var tmp;
-    for(var f = 0; f < g_selectedFeatures.length; f++) {
-        tmp = data[ g_selectedFeatures[f] ];
-        tmp = (tmp - g_min[f]) / (g_max[f] - g_min[f]);
-
-        testData[f] = tmp;
-    }
-    return g_net.run(testData);
-}
+// Get data in brain format, and test on the first row of features.
+// return { char: probability }
+Learner.prototype.test = function(data) {
+    return this.neuralNet.run(this.normalize(data)[0].input);
+};

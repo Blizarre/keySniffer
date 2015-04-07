@@ -12,10 +12,10 @@
         <link rel="stylesheet" href="index.css" type="text/css" />
         <title>Keyboard sniffer</title>
     </head>
-    <body onKeyDown=";if (wasKeyUpped==true) { wasKeyUpped=false; keyAction(event); }" onKeyUp="wasKeyUpped=true; /*keyAction(event);*/">
+    <body >
         <h1>Gather training data</h1>
-        <input type="text" id="keyTrain"></input>
-        <ul id="sniffList"></ul>
+        <input type="text" id="keyTrain" onKeyDown="inputKeyDownPressed('training', event);" onKeyUp="inputKeyUpPressed('training', event);"></input>
+        <ul id="trainSampleList"></ul>
         <h2>Data</h2>
         <table>
             <tr>
@@ -34,12 +34,12 @@
         <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>
         <h1>Train model</h1>
         <p><label for="featureToKeep">Feature to keep</label><input type="text" id="featureToKeep" disabled="true" value="1 3 5 10 20 50 100 150 200 400 700"></input></p>
-        <button disabled id="normalize">Normalize</button>
-        <button disabled id="trainFromData">Train !</button>
+        <button disabled id="computeNormParams" onClick="computeNormParams();">Compute Normalization parameters</button>
+        <button disabled id="trainFromData" onClick="trainFromData();">Train !</button>
         <p>Result:</p>
         Error rate: <span id="errorRate"></span>%, number of iterations: <span id="nbIter"></span></p>
         <h1>Test</h1>
-        <input disabled type="text" id="keyTest"></input>
+        <input disabled type="text" id="keyTest" onKeyDown="inputKeyDownPressed('testing', event);" onKeyUp="inputKeyUpPressed('testing', event);"></input>
         <ul id="keyTestResult"></li>
     </body>
 </html>

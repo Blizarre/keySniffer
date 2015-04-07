@@ -79,7 +79,8 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
         }
     }
     
-    //
+    // What are we looking for ? Ideally an area with very strong high frequencies....
+    // Lots of false positives with the current system right now
     var timeBefore=3; //ms
     var timeAfter=3; //ms
     var minIdxSignal=idxMax-timeBefore*g_audioRecorder.context.sampleRate/1000;

@@ -37,7 +37,8 @@ function getCharItem(code)
     return $$("#trainSampleList li.sniff" + code + " span.value");
 }
 
-
+var g_perfs = { nbOk: 0, nbTotal: 0 };
+    
 // a new key has been pressed on the training input field 
 function inputKeyPressed(type, code, dataFFT, dataTime) {
     if(type == "training") {
@@ -52,17 +53,25 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
         g_features[code].push(dataFFT);
         var item = getCharItem(code);
         item.textContent = g_features[code].length;
-    } else {
+    } else { // todo: create function
         var result = g_trainInfo.test( g_trainInfo.convertToBrainFormat( {"?": [ dataFFT ] } ) );
         var char;
         $("#keyTestResult").fill();
-    
+        var max = {key:"", val:-1000.0};
         for(char in result) {
             if(result.hasOwnProperty(char)) {
+                if(result[char] > max.val) { 
+                    max.val = result[char], max.key = char;
+                }
                 var cssProperty =  {$: char==code?"+label":""};
                 $("#keyTestResult").add(EE('li', cssProperty,  String.fromCharCode(char) + ": " + result[char] ));
             }
         }
+        if(max.key === char) {
+            g_perfs.nbOk ++;
+        } 
+        g_perfs.nbTotal ++;
+        $$("#perf").textContent = "Perf: " + (100.0 * g_perfs.nbOk / g_perfs.nbTotal).toFixed(2) + "% over " + g_perfs.nbTotal + " tests"; 
     }
     
     // Test some display
@@ -98,7 +107,6 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     
     if( $("#updateGraphs").get("checked")) {
         showData({what: slicedSignal , where: "areaAroundPeak" , title: "Small area around the peak value", type:"time", binWidth : 1000 / frequency} );
-            
         showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization", type:"fft", binWidth : 1});
         showData({what: dataTime, where: "chartContainerTime", title: "time visualization", type:"time", binWidth : 1000 / frequency});
     }
@@ -152,7 +160,7 @@ function computeNormParams() {
 function trainFromData() {
     var done = g_trainInfo.train( g_trainInfo.convertToBrainFormat(g_features) );
     $$("#nbIter").textContent = done.iterations.toString();
-    $$("#errorRate").textContent = done.error.toString();
+    $$("#errorRate").textContent = (100.0 * done.error).toFixed(2);
     $('#keyTest').set('disabled', null);
 };
     

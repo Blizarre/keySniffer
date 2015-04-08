@@ -6,11 +6,21 @@
 
 /* The "real" key pressed by the user */ 
 .label {
-    color: green;
     font-weight:bold;
 }
 
-/* a key not pressed by the user */ 
-.noise {
+/* key guessed is the good one */
+.goodMatch {
     color:black;
+}
+
+/* key guessed is the wrong one */
+.badMatch {
+    color:red;
+}
+
+.graph {
+    margin-bottom: 2em;
+    height: 300px; 
+    width: 100%;
 }

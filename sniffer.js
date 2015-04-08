@@ -59,7 +59,7 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     
         for(char in result) {
             if(result.hasOwnProperty(char)) {
-                var cssProperty =  {$: char==code?"label":"noise"};
+                var cssProperty =  {$: char==code?"+label":""};
                 $("#keyTestResult").add(EE('li', cssProperty,  String.fromCharCode(char) + ": " + result[char] ));
             }
         }
@@ -85,18 +85,24 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     // An idea: Look for the *first* disruption in the sound data ?
     var timeBefore=3; //ms
     var timeAfter=3; //ms
-    var minIdxSignal=idxMax-timeBefore*g_audioRecorder.context.sampleRate/1000;
-    var maxIdxSignal=idxMax+timeAfter*g_audioRecorder.context.sampleRate/1000;
+    var frequency = g_audioRecorder.context.sampleRate;
+    var minIdxSignal=idxMax-timeBefore*frequency/1000;
+    var maxIdxSignal=idxMax+timeAfter*frequency/1000;
 
     minIdxSignal=(minIdxSignal<0)?0:minIdxSignal;
     maxIdxSignal=(maxIdxSignal<dataTime.length)?maxIdxSignal:dataTime.length-1;
     
     
     var slicedSignal=dataTime.slice(minIdxSignal, maxIdxSignal);
-    showData({what: slicedSignal , where: "areaAroundPeak" , title: "Small area around the peak value" });
+
     
-    showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization" });
-    showData({what: dataTime, where: "chartContainerTime", title: "time visualization"});
+    if( $("#updateGraphs").get("checked")) {
+        showData({what: slicedSignal , where: "areaAroundPeak" , title: "Small area around the peak value", type:"time", binWidth : 1000 / frequency} );
+            
+        showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization", type:"fft", binWidth : 1});
+        showData({what: dataTime, where: "chartContainerTime", title: "time visualization", type:"time", binWidth : 1000 / frequency});
+    }
+        
 }
 
 
@@ -182,7 +188,8 @@ function setMediaStream(stream){
     g_analyser.fftSize = 2048;
     g_analyser.smoothingTimeConstant = 0;
     
-    g_analyser.connect(context.destination);
+    // Remove loopback, sorry Remy, you know it works now right ?
+    //g_analyser.connect(context.destination);
     
     // get time data
     var inputPoint = context.createGain();

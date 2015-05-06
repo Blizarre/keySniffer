@@ -76,7 +76,26 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     
     // Test some display
     
-    // find maximum
+
+    var ROILen=10; // Length of the ROI to keep
+    var TimeROI = getROI(dataTime, ROILen);
+    
+    var isValidTouch=isDataValid(dataTime, TimeROI);
+
+    var frequency = g_audioRecorder.context.sampleRate;
+    
+    if( $("#updateGraphs").get("checked")) {
+        if (isValidTouch) showData({what: TimeROI.ROIData , where: "areaAroundPeak" , title: "Small area around the peak value", type:"time", binWidth : 1000 / frequency} );
+        else $$( "#areaAroundPeak" ).textContent= "INVALID SIGNAL" ;
+        showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization", type:"fft", binWidth : 1});
+        showData({what: dataTime, where: "chartContainerTime", title: "time visualization", type:"time", binWidth : 1000 / frequency});
+    }
+        
+}
+
+function getROI(dataTime, ROILen)
+{
+    // find maximum along the signal
     var maxValue=-1;
     var idxMax=-1;
     for (var i=0; i<dataTime.length; i++)
@@ -88,30 +107,72 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
         }
     }
     
-    // What are we looking for ? Ideally an area with very strong high frequencies....
-    // Lots of false positives with the current system right now.
-    //
-    // An idea: Look for the *first* disruption in the sound data ?
-    var timeBefore=3; //ms
-    var timeAfter=3; //ms
     var frequency = g_audioRecorder.context.sampleRate;
-    var minIdxSignal=idxMax-timeBefore*frequency/1000;
-    var maxIdxSignal=idxMax+timeAfter*frequency/1000;
-
-    minIdxSignal=(minIdxSignal<0)?0:minIdxSignal;
-    maxIdxSignal=(maxIdxSignal<dataTime.length)?maxIdxSignal:dataTime.length-1;
+    var nbSamplesAround=ROILen*frequency/1000;
     
+    // Find the area with the most power
+    var scores = new Float32Array(nbSamplesAround);
+    var startPos, stopPos;
     
-    var slicedSignal=dataTime.slice(minIdxSignal, maxIdxSignal);
-
-    
-    if( $("#updateGraphs").get("checked")) {
-        showData({what: slicedSignal , where: "areaAroundPeak" , title: "Small area around the peak value", type:"time", binWidth : 1000 / frequency} );
-        showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization", type:"fft", binWidth : 1});
-        showData({what: dataTime, where: "chartContainerTime", title: "time visualization", type:"time", binWidth : 1000 / frequency});
-    }
+    // test the sliding at all the possibles possitions (can be more efficient but OK we have a fucking cluster around :p)
+    // No use of Hilbert transform... not the time
+    // Why using the maximum, why not searching on the whole signal cut
+    for (var i=0; i<nbSamplesAround; i++)
+    {
+        startPos=idxMax-nbSamplesAround+i;
+        stopPos=idxMax+i;
         
+        if ((startPos<0)||(stopPos>=dataTime.length)) 
+        {
+            scores[i]=-1;
+        }
+        else
+        {
+            scores[i]=dataTime.slice(startPos, stopPos).reduce(function(lastVal, currVal, idx, arr){return lastVal + Math.abs(currVal);});
+        }
+    }
+    
+    // get the maximum score
+    var max=-1, maxPos=-1;
+    for (var i=0; i<scores.length; i++)
+    {
+        if (scores[i]>max)
+        {
+            max=scores[i];
+            maxPos=i;
+        }
+    }
+    
+    if (maxPos==-1) return null;
+    
+    var cutSignal=dataTime.slice( idxMax-nbSamplesAround+maxPos, idxMax+maxPos);
+    
+    return {ROIStart: idxMax-nbSamplesAround+maxPos,
+             ROIStop: idxMax+maxPos,
+             ROIData: cutSignal,
+              ROIAvg: cutSignal.reduce(function(lastVal, currVal, idx, arr){return lastVal + Math.abs(currVal);})/cutSignal.length};
 }
+
+
+function isDataValid(dataTime, TimeROI)
+{
+    // Get average of 
+    var avgLen=0;
+    var avg=0.0;
+    
+    for (var i=0; i<dataTime.length; i++)
+    {
+        if ((i>=TimeROI.ROIStart)&&(i<TimeROI.ROIStop)) continue;
+        avgLen++;
+        avg+= Math.abs(dataTime[i]);
+    }
+    avg/=avgLen;
+    
+    
+    // return if the ratio between the maximum area and the rest is kinda high
+    return (TimeROI.ROIAvg/avg)>3;
+}
+
 
 
 // Return the current fft data captured from the microphone.

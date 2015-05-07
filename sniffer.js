@@ -80,13 +80,26 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     var ROILen=10; // Length of the ROI to keep
     var TimeROI = getROIOverall(dataTime, ROILen); //getROIAroundMax(dataTime, ROILen);
     
+    var fft = new FFT(TimeROI.ROIData.length, 44100);
+    fft.forward(TimeROI.ROIData);
+    var spectrum = fft.spectrum;
+    
+    
     var isValidTouch=isDataValid(dataTime, TimeROI);
 
     var frequency = g_audioRecorder.context.sampleRate;
     
     if( $("#updateGraphs").get("checked")) {
-        if (isValidTouch) showData({what: TimeROI.ROIData , where: "areaAroundPeak" , title: "Small area around the peak value", type:"time", binWidth : 1000 / frequency} );
-        else $$( "#areaAroundPeak" ).textContent= "INVALID SIGNAL" ;
+        if (isValidTouch)
+        {
+            showData({what: TimeROI.ROIData , where: "areaAroundPeak" , title: "Small area around the peak value", type:"time", binWidth : 1000 / frequency} );
+            showData({what: spectrum , where: "chartContainerFFTZoom" , title: "FFT of small area around the peak value", type:"time", binWidth : 1} );
+        }
+        else
+        {
+            $$( "#areaAroundPeak" ).textContent= "INVALID SIGNAL" ;
+            $$( "#chartContainerFFTZoom" ).textContent= "INVALID SIGNAL" ;
+        }
         showData({what: dataFFT , where: "chartContainerFFT" , title: "fft visualization", type:"fft", binWidth : 1});
         showData({what: dataTime, where: "chartContainerTime", title: "time visualization", type:"time", binWidth : 1000 / frequency});
     }
@@ -109,6 +122,8 @@ function getROIAroundMax(dataTime, ROILen)
     
     var frequency = g_audioRecorder.context.sampleRate;
     var nbSamplesAround=ROILen*frequency/1000;
+    
+    nbSamplesAround=Math.pow( 2, Math.ceil( Math.log( nbSamplesAround ) / Math.log( 2 ) ) ); // Get the upper power of 2
     
     // Find the area with the most power
     var scores = new Float32Array(nbSamplesAround);
@@ -158,6 +173,7 @@ function getROIOverall(dataTime, ROILen)
 {
     var frequency = g_audioRecorder.context.sampleRate;
     var nbSamplesAround=ROILen*frequency/1000;
+    nbSamplesAround=Math.pow( 2, Math.ceil( Math.log( nbSamplesAround ) / Math.log( 2 ) ) ); // Get the upper power of 2
     
     // Find the area with the most power
     var scores = new Float32Array(dataTime.length-nbSamplesAround);

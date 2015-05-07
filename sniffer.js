@@ -78,7 +78,7 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
     
 
     var ROILen=10; // Length of the ROI to keep
-    var TimeROI = getROI(dataTime, ROILen);
+    var TimeROI = getROIOverall(dataTime, ROILen); //getROIAroundMax(dataTime, ROILen);
     
     var isValidTouch=isDataValid(dataTime, TimeROI);
 
@@ -93,7 +93,7 @@ function inputKeyPressed(type, code, dataFFT, dataTime) {
         
 }
 
-function getROI(dataTime, ROILen)
+function getROIAroundMax(dataTime, ROILen)
 {
     // find maximum along the signal
     var maxValue=-1;
@@ -149,6 +149,48 @@ function getROI(dataTime, ROILen)
     
     return {ROIStart: idxMax-nbSamplesAround+maxPos,
              ROIStop: idxMax+maxPos,
+             ROIData: cutSignal,
+              ROIAvg: cutSignal.reduce(function(lastVal, currVal, idx, arr){return lastVal + Math.abs(currVal);})/cutSignal.length};
+}
+
+
+function getROIOverall(dataTime, ROILen)
+{
+    var frequency = g_audioRecorder.context.sampleRate;
+    var nbSamplesAround=ROILen*frequency/1000;
+    
+    // Find the area with the most power
+    var scores = new Float32Array(dataTime.length-nbSamplesAround);
+    var startPos, stopPos;
+    
+    // test the sliding at all the possibles possitions (can be more efficient but OK we have a fucking cluster around :p)
+    // No use of Hilbert transform... not the time
+    // Why using the maximum, why not searching on the whole signal cut
+    for (var i=0; i<dataTime.length-nbSamplesAround; i++)
+    {
+        startPos=i;
+        stopPos=nbSamplesAround+i;
+
+        scores[i]=dataTime.slice(startPos, stopPos).reduce(function(lastVal, currVal, idx, arr){return lastVal + Math.abs(currVal);});
+    }
+    
+    // get the maximum score
+    var max=-1, maxPos=-1;
+    for (var i=0; i<scores.length; i++)
+    {
+        if (scores[i]>max)
+        {
+            max=scores[i];
+            maxPos=i;
+        }
+    }
+    
+    if (maxPos==-1) return null;
+    
+    var cutSignal=dataTime.slice( maxPos, nbSamplesAround+maxPos);
+    
+    return {ROIStart: maxPos,
+             ROIStop: nbSamplesAround+maxPos,
              ROIData: cutSignal,
               ROIAvg: cutSignal.reduce(function(lastVal, currVal, idx, arr){return lastVal + Math.abs(currVal);})/cutSignal.length};
 }
